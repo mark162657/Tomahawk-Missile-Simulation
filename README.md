@@ -235,25 +235,7 @@ python -c "from src.terrain.coordinates import CoordinateSystem; cs = Coordinate
 
 ---
 
-## Contributing
-
-Contributions are welcome. Please:
-- Follow modular design principles
-- Add tests for new features
-- Update documentation
-- Keep commits focused and well-described
-
----
-
 ## License
 
 For educational, research, and demonstrative use only. No classified or proprietary military technology included. See LICENSE file.
 
----
-
-## References
-
-- Welch & Bishop. "An Introduction to the Kalman Filter" (2006)
-- Propelant Navigation principles in aerospace guidance
-- TERCOM algorithm literature from missile guidance research
-- SRTM DEM documentation from CGIAR-CSI
