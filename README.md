@@ -62,7 +62,7 @@ AdvancedMissileGuidanceFramework/
 **Tech Stack:** Python 3.10+ | NumPy | rasterio | matplotlib | scipy
 
 ---
-
+<!-- 
 ## Getting Started
 
 ### Prerequisites
@@ -125,6 +125,8 @@ python src/simulation/engine.py --config config/config.yaml
 ```
 
 Output plots and metrics will be saved to `data/results/`
+
+--- -->
 
 ---
 
