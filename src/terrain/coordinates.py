@@ -1,4 +1,5 @@
 import math
+import numpy as np
 from typing import Tuple
 
 class CoordinateSystem:
@@ -14,9 +15,7 @@ class CoordinateSystem:
     def latlong_to_xy(self, lat: float, lon: float) -> Tuple[float, float]:
         """
 
-        :param lat:
-        :param lon:
-        :return:
+
         """
 
         delta_lat = lat - self.origin_lat
@@ -58,3 +57,22 @@ class CoordinateSystem:
         rad = 6371000 # Earth's radius (in meters)
         c = 2 * math.asin(math.sqrt(a))
         return rad * c
+
+    def get_heading(self, lat1: float, long1: float, lat2: float, long2: float) -> float:
+
+        """
+
+        Return:
+
+
+        Based on: Source - https://stackoverflow.com/questions/54873868/python-calculate-bearing-between-two-lat-long
+        Retrieved 2025-11-10, License - CC BY-SA 4.0
+        """
+
+        dLon = (long2 - long1)
+        x = math.cos(math.radians(lat2)) * math.sin(math.radians(dLon))
+        y = math.cos(math.radians(lat1)) * math.sin(math.radians(lat2)) - math.sin(math.radians(lat1)) * math.cos(
+            math.radians(lat2)) * math.cos(math.radians(dLon))
+        bearing = (math.degrees(math.atan2(x, y)) + 360) % 360 # normalising the degree (prevent negative)
+
+        return bearing
