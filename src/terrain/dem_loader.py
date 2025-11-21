@@ -172,17 +172,14 @@ if __name__ == "__main__":
     print(f"  Downsampled shae: {dem_downsampled.shape} | Total pixels: {dem_downsampled.size:,}")
     print(f"  Reduction by: {dem_data.size / dem_downsampled.size:.0f}x")
 
-    # AI generated sections about custom colour sgements: (im so bad at colour and art...)
     # green -> yellow -> brown -> white
     colors = ['#2d5016', '#5a8c2b', '#8fb359', '#d4c77e', '#a67c52', '#ffffff']
     n_bins = 100
     cmap_custom = LinearSegmentedColormap.from_list('terrain_land', colors, N=n_bins)
 
-    # AI assisted: Calculate elevation percentiles to exclude extreme outliers
     vmin = np.nanpercentile(dem_downsampled, 2)   # 2nd percentile
     vmax = np.nanpercentile(dem_downsampled, 98)  # 98th percentile
 
-    # AI: Create hillshade
     ls = LightSource(azdeg=315, altdeg=45)
     hillshade = ls.hillshade(dem_downsampled, vert_exag=2, dx=1, dy=1)
 
