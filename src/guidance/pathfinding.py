@@ -1,4 +1,3 @@
-from asyncio.windows_events import NULL
 from ..terrain.dem_loader import DEMLoader
 import math
 from pathlib import Path
@@ -104,10 +103,16 @@ class Pathfinding:
         
         return math.sqrt(dist_x ** 2 + dist_y ** 2)
     
-    def _get_neighbours(self, node: tuple[int, int]) -> list:
+    def _get_neighbors(self, node: tuple[int, int]) -> list:
         """
         Find all 8 neighbor (direct-contact) pixels around the central pixel. 
+        Append them to neighbors list if in range of the dem and output the list.
 
+        Args:
+            - node: the centre node that is the base of neighbor-searching
+        
+        Return:
+            - neighbors: the list that stores all the row and col of the surrounding neighbors.
         """
         row, col = node
         
@@ -124,7 +129,7 @@ class Pathfinding:
         return neighbors
     
     def _get_movement_cost(self, current: tuple[int, int], neighbor: tuple[int, int]):
-        surface_dist = self.heuristic(current, neighbor)
+        dist_cost = self.heuristic(current, neighbor)
 
         curr_elev = self.dem[current]
         neigh_elev = self.dem[neighbor]
@@ -133,46 +138,36 @@ class Pathfinding:
         if curr_elev <= -100 or neigh_elev <= -100:
             return float("inf") # cannot fly path that no data area (uncertain of the terrain)
         
+
+        # Decision penalty
+
+        climb_height = neigh_elev - curr_elev
         
 
+        # Situation 1: downhill (go down valley, prefered, less penalty)
+        if climb_height < 0:
+            dist_cost + (climb_height * 0.5)
 
+        # Situation 2: uphill (hill, mountain, those requires to go up)
+        gradient = climb_height / (dist_cost + 1e-6) # +1e-6 to prevent div by zero error
+        penalty = 0.0
         
+        # Level 1: gentle slope
+        if gradient <= 0.05:
+            # ignore, penalty weight: low (scale of 5)
+            penalty = climb_height * 5.0
 
+        # Level 2: a bit steep slope
+        elif gradient <= 0.15:
+            # penalty weight: medium (20)
+            penalty = climb_height * 20
 
-    
+        # Level 3: other steep slope
+        elif gradient > 0.15:
+            # penalty weight: high (100), the program will chose other path unless still the closest even with penalty
+            penalty = climb_height * 100 # apply a lot of penalty to very steep 
 
-
-
-
-
-    
-
-        
-        
-
-        
-
-
-        
-        
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        return dist_cost + penalty
 
 
 
