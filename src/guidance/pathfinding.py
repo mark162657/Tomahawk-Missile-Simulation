@@ -146,7 +146,7 @@ class Pathfinding:
 
         # Situation 1: downhill (go down valley, prefered, less penalty)
         if climb_height < 0:
-            dist_cost + (climb_height * 0.5)
+            return dist_cost + (climb_height * 0.5)
 
         # Situation 2: uphill (hill, mountain, those requires to go up)
         gradient = climb_height / (dist_cost + 1e-6) # +1e-6 to prevent div by zero error
@@ -168,6 +168,5 @@ class Pathfinding:
             penalty = climb_height * 100 # apply a lot of penalty to very steep 
 
         return dist_cost + penalty
-
 
 
