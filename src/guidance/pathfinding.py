@@ -4,7 +4,7 @@ from ..terrain.dem_loader import DEMLoader
 import math
 from pathlib import Path
 import numpy as np
-import heapq
+
 
 class Pathfinding:
     """
@@ -44,34 +44,8 @@ class Pathfinding:
 
         print("Lookup table generated")
 
-    # *** FOR TEST ONLY ***
-    def get_surfcae_distance(self, loc1: tuple[float, float], loc2: tuple[float, float]) -> float:
-        """
-        Get the distance (ground distance, ignoring height) of two GPS points. Take into consideration of shrink of latitude shrink.
-        Mainly using the Haversine distance formula to acheive the purpose.
 
-        Args:
-            - loc1 / loc2: tuple that stores the lat/lon coordinate
-        """
-
-        lat1, lon1 = loc1
-        lat2, lon2 = loc2
-
-        # Convert to radians
-        lat1_r, lon1_r = math.radians(lat1), math.radians(lon1)
-        lat2_r, lon2_r = math.radians(lat2), math.radians(lon2)
-
-        dlon = lon2_r - lon1_r
-        dlat = lat2_r - lat1_r
-
-        a = math.sin(dlat / 2) ** 2 + math.cos(lat1_r) * math.cos(lat2_r) * math.sin(dlon / 2) ** 2
-        c = 2 * math.asin(math.sqrt(a))
-        r = 6371000 # Earth radius in meter
-
-
-        return c * r
-
-    def heuristic(self, loc1: tuple[int, int], loc2: tuple[int, int]) -> float:
+    def _heuristic(self, loc1_idx: int, loc2_idx: int) -> float:
         """
         Calculate the heuristic distance between two pixel (locations) using Euclidean distance.
 
@@ -89,10 +63,10 @@ class Pathfinding:
             - Euclidean distacnce between two points (also as H-score)
 
         """
-
+        
         # Location node
-        row1, col1 = loc1
-        row2, col2 = loc2
+        row1, col1 = divmod(loc1_idx, self.col)
+        row2, col2 = divmod(loc2_idx, self.col)
 
         # Get vertical distance (north/south direction)
         dist_y = (row2 - row1) * self.meter_per_y
@@ -109,7 +83,7 @@ class Pathfinding:
         
         return math.sqrt(dist_x ** 2 + dist_y ** 2)
     
-    def _get_neighbors(self, node: tuple[int, int]) -> list:
+    def _get_neighbors(self, loc_idx: int) -> list:
         """
         Find all 8 neighbor (direct-contact) pixels around the central pixel. 
         Append them to neighbors list if in range of the dem and output the list.
@@ -120,7 +94,7 @@ class Pathfinding:
         Return:
             - neighbors: the list that stores all the row and col of the surrounding neighbors.
         """
-        row, col = node
+        row, col = divmod(loc_idx, self.col)
         
         neighbors = []
 
@@ -130,12 +104,17 @@ class Pathfinding:
             new_rol, new_col = row + r, col + c
 
             if 0 <= new_rol < self.row and 0 <= new_col < self.col:
-                neighbors.append((new_rol, new_col))
+                neighbors.append(new_rol * self.col + new_col)
 
         return neighbors
     
-    def _get_movement_cost(self, current: tuple[int, int], neighbor: tuple[int, int]):
-        dist_cost = self.heuristic(current, neighbor)
+    def _get_movement_cost(self, current_idx: int, neighbor_idx: int) -> float:
+
+        # Convert index param to tuple(int, int)
+        current = divmod(current_idx, self.col)
+        neighbor = divmod(neighbor_idx, self.col)
+        
+        dist_cost = self._heuristic(current_idx, neighbor_idx)
 
         curr_elev = self.dem[current]
         neigh_elev = self.dem[neighbor]
@@ -174,94 +153,135 @@ class Pathfinding:
             penalty = climb_height * 100 # apply a lot of penalty to very steep 
 
         return dist_cost + penalty
+    
 
-    # --- TODO: Fix variable naming inconsistency---
-
-    def pathfinding(self, start: tuple[int, int], end: tuple[int, int], heuristic_weight: float=2.5):
+    def pathfinding(self, start: tuple[int, int], end: tuple[int, int]) -> None:
         """
-
+        
         Note:
             The pathfining algorithm will implement multiple approach to improve RAM usage, so device with less RAM can still execute the program.
         Args:
-            - heuristic_weight: prevents the algorithm to look into a whole large area that causes memory leak. Default: 2.5, adjustable later.
+            - 
         """
 
-        heuristic_weight = 2.5
-
-        # Int saves more memory then Tuple(int, int), thus, we turn each row, col element into index.
-        # Index = row * num of all columns + col
+        # if heuristic_weight < 1:
+        #     raise ValueError("heuristic_weight cannot be less than 1")
+        # Turn start, end pixel coord tuple into int index to save memory
         start_idx = start[0] * self.col + start[1]
-        end_idx = end[0] * self.col + end[1]
-
-
-        # Use heapq to construct priority queue instead of PriorityQueue due to speed. (slight diff make a diff when having millions of pixels) -> min heap (i assume)
+        end_idx = end[0] * self.col + end[1] 
+        
+        # Initialise some crucial storage
+        came_from = {}
         open_set = []
-        heapq.heappush(open_set, (0, start_idx))
+        heapq.heappush(open_set, (0, start_idx)) # open_set: (f_score, pixel_idx)
 
-    
-        came_from = {} # {parent_index: child_index}
+        # Initiate the dict for g_score
         g_score = {start_idx: 0.0}
-        curr_loc = () # Initiate as a tuple, later stores (row, col) pair indicating current pixel
 
-
+        current_loc = ()
+        
+        # Count how many nodes were explored
         node_explored = 0
-        max_nodes = 5000000 # the max node (pixel) that the algorithm can search, prevent memory leak
 
-        print(f"Pathfinding: {start} -> {end} | Weight: {heuristic_weight}")
+        print(f"Pathfinding: {start} -> {end}")
 
+        while open_set:
 
-        while not open_set.empty():
-            node_explored += 1
-            if node_explored > max_nodes:
-                print("Possibly Memory Leaked! Pathfinding terminated, adjust parameter")
-                return None
-            
-            # Pop the lowest f_score (always on top of the heap)
+            node_explored += 1 
+
             current_f, current_idx = heapq.heappop(open_set)
-
-            # Turn the index back into row, col pair 
-            curr_row, curr_col = divmod(current_idx, self.col)
-            curr_loc = (curr_row, curr_col)
-
-            if current_idx == end_idx:
-                print(f"Target acquired, path found. Total of: {node_explored} node explored")
-                self._reconstruct_path(came_from, current_idx)
             
-            # Exploring neighbors
-            for neigh_loc in self._get_neighbors(curr_col):
-                neigh_r, neigh_c = neigh_loc # each item in the list is a tuple
-                neigh_idx = neigh_r * self.col + neigh_c
+            # Do the index -> row, col pixel conversion to convert index back to pixel coordinate
+            current_row, current_col = divmod(current_idx, self.col)
+            current_loc = (current_row, current_col)
 
-                # Obtain the movement cost
-                move_cost = self._get_movement_cost(curr_loc, neigh_loc)
+            # Check if target reached
+            if current_idx == end_idx:
+                print(f"Target acquired, pathfinding done... Total of {node_explored} nodes explored.")
+                return self._reconstruct_path(came_from, current_idx)
 
-                if move_cost == float("inf"): # handle the no-data location, jump to next neighbor
+            for neigh_idx in self._get_neighbors(current_idx):
+
+                 
+                # Obtain movement cost
+                move_cost = self._get_movement_cost(current_idx, neigh_idx)
+
+                if move_cost == float("inf"): # if "no data" area, proceeds
                     continue
-
+                
                 temp_g_score = g_score[current_idx] + move_cost
-
-                if temp_g_score < g_score[neigh_idx]:
+                
+                # Discover better path and update to open_set for each nighbor
+                if temp_g_score < g_score.get(neigh_idx, float("inf")):
+                    # store the neighbor node into came_from (so we remember the path)
                     came_from[neigh_idx] = current_idx
                     g_score[neigh_idx] = temp_g_score
-                    
-                    h_score = self.heuristic(neigh_loc, end)
-                    f_score = temp_g_score + (h_score * heuristic_weight)
 
+                    # get f_score (find h_score first)
+                    h_score = self._heuristic(neigh_idx, end_idx)
+                    f_score = temp_g_score + h_score
+
+                    # push to open_set priority queue
                     heapq.heappush(open_set, (f_score, neigh_idx))
-                
-                
-
+        
+        print("Queue exhausted. No path found.")
+        return None
 
     def _reconstruct_path(self, came_from: dict, current_index: int=0) -> list:
+        """
+        
+        """
         path = []
         
         while current_index in came_from:
             path.append(divmod(current_index, self.col))
-            # The current index is set to the item, which corresponds to the parent
+            # the current index is set to the item, which corresponds to the parent
             current_index = came_from[current_index]
 
         # Add the start node
-        path.append(divmod(current_index))
+        path.append(divmod(current_index, self.col))
 
-        # Inverse the list: [End, B, A, Start] -> [Start, A, B, End]
+        # Reverse the list: [End, B, A, Start] -> [Start, A, B, End]
         return path[::-1]
+    
+
+    # ------ Test Verification Functions ------
+    def get_surfcae_distance(self, loc1: tuple[float, float], loc2: tuple[float, float]) -> float:
+        """
+        Get the distance (ground distance, ignoring height) of two GPS points. Take into consideration of shrink of latitude shrink.
+        Mainly using the Haversine distance formula to acheive the purpose.
+
+        Args:
+            - loc1 / loc2: tuple that stores the lat/lon coordinate
+        """
+
+        lat1, lon1 = loc1
+        lat2, lon2 = loc2
+
+        # Convert to radians
+        lat1_r, lon1_r = math.radians(lat1), math.radians(lon1)
+        lat2_r, lon2_r = math.radians(lat2), math.radians(lon2)
+
+        dlon = lon2_r - lon1_r
+        dlat = lat2_r - lat1_r
+
+        a = math.sin(dlat / 2) ** 2 + math.cos(lat1_r) * math.cos(lat2_r) * math.sin(dlon / 2) ** 2
+        c = 2 * math.asin(math.sqrt(a))
+        r = 6371000 # Earth radius in meter
+        
+        return c * r
+    
+    def idx_to_pixel(self, index):
+        """
+        Docstring for idx_to_pixel
+        
+        :param self: Description
+        :param index: Description
+        """
+        row, col = divmod(index, self.col)
+        pixel = (row, col)
+        return pixel
+    
+    def pixel_to_idx(self, row, col):
+        return row * self.col + col
+    # ------ Test Ends ------
