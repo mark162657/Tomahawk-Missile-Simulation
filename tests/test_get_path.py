@@ -45,7 +45,7 @@ def test_pathfinding_gps(start: tuple[float, float], end: tuple[float, float]):
 
     print("\n============================================================")
     print("START PATHFINDING")
-    print("============================================================")
+    print("============================================================\n")
     
     start_time = time.time()
     pf.pathfinding(start_loc, end_loc)
@@ -58,8 +58,8 @@ def test_pathfinding_gps(start: tuple[float, float], end: tuple[float, float]):
 
 if __name__ == "__main__":
 
-    start_gps = (55.0, 92.0)
-    end_gps = (55.07, 92.13)
+    start_gps = (56.0, 94.0)
+    end_gps = (55.20, 95.00)
 
     path = test_pathfinding_gps(start_gps, end_gps)
 

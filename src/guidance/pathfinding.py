@@ -137,25 +137,25 @@ class Pathfinding:
         gradient = climb_height / (dist_cost + 1e-6) # +1e-6 to prevent div by zero error
         penalty = 0.0
         
-        # Level 1: gentle slope
+        # Level 1: gentle slope (<3°)
         if gradient <= 0.05:
-            # ignore, penalty weight: low (scale of 5)
-            penalty = climb_height * 5.0
+            # ignore, penalty weight: low (scale of 2)
+            penalty = climb_height * 2.0
 
-        # Level 2: a bit steep slope
+        # Level 2: moderate (3-8.5°)
         elif gradient <= 0.15:
-            # penalty weight: medium (20)
-            penalty = climb_height * 20
+            # penalty weight: medium (10)
+            penalty = climb_height * 10.0
 
-        # Level 3: other steep slope
+        # Level 3: steep (>8.5°)
         elif gradient > 0.15:
             # penalty weight: high (100), the program will chose other path unless still the closest even with penalty
-            penalty = climb_height * 100 # apply a lot of penalty to very steep 
+            penalty = climb_height * 100.0 # apply a lot of penalty to very steep 
 
         return dist_cost + penalty
     
 
-    def pathfinding(self, start: tuple[int, int], end: tuple[int, int]) -> None:
+    def pathfinding(self, start: tuple[int, int], end: tuple[int, int], heuristic_weight: float=1.1) -> None:
         """
         
         Note:
@@ -183,7 +183,7 @@ class Pathfinding:
         # Count how many nodes were explored
         node_explored = 0
 
-        print(f"Pathfinding: {start} -> {end}")
+        print(f"Pathfinding: {start} -> {end} | Weight: {heuristic_weight}")
 
         while open_set:
 
@@ -219,7 +219,7 @@ class Pathfinding:
 
                     # get f_score (find h_score first)
                     h_score = self._heuristic(neigh_idx, end_idx)
-                    f_score = temp_g_score + h_score
+                    f_score = temp_g_score + (h_score * heuristic_weight)
 
                     # push to open_set priority queue
                     heapq.heappush(open_set, (f_score, neigh_idx))
