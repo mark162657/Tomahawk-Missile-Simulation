@@ -16,7 +16,7 @@ import rasterio
 from matplotlib.colors import LinearSegmentedColormap
 
 def visualize_path_comparison(start_gps: tuple[float, float], end_gps: tuple[float, float], 
-                               weights: list[float] = [1.0, 1.5, 2.0]):
+                               weights: list[float] = [1.0, 1.1, 1.2, 1.5, 2.0]):
     """
     Run pathfinding with multiple heuristic weights and visualize all paths on the same map.
     
@@ -219,9 +219,6 @@ def visualize_path_comparison(start_gps: tuple[float, float], end_gps: tuple[flo
 
 
 if __name__ == "__main__":
-    import random
-    import math
-    
     # Test configuration
     print("\nSelect test scenario:")
     print("1. Short path (~10km)")
@@ -231,31 +228,16 @@ if __name__ == "__main__":
     
     choice = input("\nEnter choice (1-4): ").strip()
     
-    # Safe region bounds (Siberia land area)
-    # Latitude range: 54°N to 58°N, Longitude range: 92°E to 98°E
-    safe_lat_min, safe_lat_max = 54.5, 57.5
-    safe_lon_min, safe_lon_max = 92.5, 97.5
+    # Base coordinate (Siberia safe land)
+    base_lat, base_lon = 56.0, 95.0
     
     # Degrees per km at latitude 56°
     deg_per_km_lon = 1 / (111.32 * 0.559193)
     deg_per_km_lat = 1 / 111.32
     
     if choice == "1":
-        # 10km in random direction from random start
-        start_lat = random.uniform(safe_lat_min, safe_lat_max)
-        start_lon = random.uniform(safe_lon_min, safe_lon_max)
-        
-        # Random direction (0-360 degrees)
-        direction = random.uniform(0, 2 * math.pi)
-        distance_km = 10.0
-        
-        # Calculate end point
-        end_lat = start_lat + (distance_km * math.cos(direction) * deg_per_km_lat)
-        end_lon = start_lon + (distance_km * math.sin(direction) * deg_per_km_lon)
-        
-        start_gps = (start_lat, start_lon)
-        end_gps = (end_lat, end_lon)
-        print(f"\n🎲 Random 10km path: Direction {math.degrees(direction):.1f}°")
+        # 10km east
+        start_gps = (base_lat, base_lon)
         end_gps = (base_lat, base_lon + 10 * deg_per_km_lon)
         
     elif choice == "2":
