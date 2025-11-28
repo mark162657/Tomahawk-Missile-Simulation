@@ -1,6 +1,5 @@
 """
 Visualize pathfinding results on a downsampled DEM to compare path quality across different heuristic weights.
-Uses multiprocessing to test multiple weights in parallel for faster results.
 """
 
 import sys
@@ -8,7 +7,6 @@ import time
 import numpy as np
 import matplotlib.pyplot as plt
 from pathlib import Path
-from multiprocessing import Pool, cpu_count
 
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -17,67 +15,8 @@ from src.guidance.pathfinding import Pathfinding
 import rasterio
 from matplotlib.colors import LinearSegmentedColormap
 
-
-def compute_path_for_weight(args):
-    """
-    Worker function for multiprocessing - computes a single path.
-    
-    Args:
-        args: Tuple of (weight, start_pixel, end_pixel, start_gps, end_gps)
-    
-    Returns:
-        Dictionary with path data or None if failed
-    """
-    weight, start_pixel, end_pixel, start_gps, end_gps = args
-    
-    try:
-        # Each process needs its own Pathfinding instance
-        pf = Pathfinding()
-        
-        print(f"\n[Process] Testing Weight: {weight}")
-        start_time = time.time()
-        
-        path = pf.pathfinding(start_pixel, end_pixel, heuristic_weight=weight)
-        
-        elapsed = time.time() - start_time
-        
-        if path:
-            path_length = len(path)
-            
-            # Calculate total distance and climb
-            total_dist = 0.0
-            total_climb = 0.0
-            for i in range(len(path) - 1):
-                curr_idx = pf.pixel_to_idx(path[i][0], path[i][1])
-                next_idx = pf.pixel_to_idx(path[i+1][0], path[i+1][1])
-                total_dist += pf._heuristic(curr_idx, next_idx)
-                
-                # Calculate elevation change
-                curr_elev = pf.dem[path[i]]
-                next_elev = pf.dem[path[i+1]]
-                climb = max(0, next_elev - curr_elev)
-                total_climb += climb
-            
-            return {
-                'weight': weight,
-                'path': path,
-                'length': path_length,
-                'distance': total_dist,
-                'climb': total_climb,
-                'time': elapsed
-            }
-        else:
-            print(f"[Process] Weight {weight}: No path found")
-            return None
-            
-    except Exception as e:
-        print(f"[Process] Weight {weight}: Error - {e}")
-        return None
-
-
 def visualize_path_comparison(start_gps: tuple[float, float], end_gps: tuple[float, float], 
-                               weights: list[float] = [1.0, 1.1, 1.2, 1.5, 2.0],
-                               use_multiprocessing: bool = True):
+                               weights: list[float] = [1.0, 1.5, 2.0]):
     """
     Run pathfinding with multiple heuristic weights and visualize all paths on the same map.
     
@@ -85,16 +24,13 @@ def visualize_path_comparison(start_gps: tuple[float, float], end_gps: tuple[flo
         start_gps: (lat, lon) start coordinate
         end_gps: (lat, lon) end coordinate
         weights: List of heuristic weights to test
-        use_multiprocessing: If True, run tests in parallel
     """
     
     print("\n" + "="*60)
     print("PATH QUALITY COMPARISON")
-    if use_multiprocessing:
-        print(f"Using multiprocessing with {min(len(weights), cpu_count())} workers")
     print("="*60)
     
-    # Initialize pathfinding to get pixel coordinates
+    # Initialize pathfinding
     pf = Pathfinding()
     
     # Convert GPS to pixel coordinates
@@ -108,73 +44,46 @@ def visualize_path_comparison(start_gps: tuple[float, float], end_gps: tuple[flo
     print(f"End GPS:   {end_gps} → Pixel: {end_pixel}")
     
     # Compute paths for each weight
-    if use_multiprocessing and len(weights) > 1:
-        # Parallel execution
-        print(f"\n🚀 Running {len(weights)} tests in parallel...")
-        overall_start = time.time()
-        
-        # Prepare arguments for each worker
-        worker_args = [(w, start_pixel, end_pixel, start_gps, end_gps) for w in weights]
-        
-        # Use Pool to run in parallel
-        with Pool(processes=min(len(weights), cpu_count())) as pool:
-            results = pool.map(compute_path_for_weight, worker_args)
-        
-        overall_elapsed = time.time() - overall_start
-        
-        # Filter out None results
-        paths_data = [r for r in results if r is not None]
-        
-        print(f"\n✅ Completed {len(paths_data)}/{len(weights)} tests in {overall_elapsed:.2f}s")
-        
-    else:
-        # Sequential execution
-        paths_data = []
-        
-        for weight in weights:
-            print(f"\n--- Testing Weight: {weight} ---")
-            start_time = time.time()
-            
-            path = pf.pathfinding(start_pixel, end_pixel, heuristic_weight=weight)
-            
-            elapsed = time.time() - start_time
-            
-            if path:
-                path_length = len(path)
-                
-                # Calculate total distance
-                total_dist = 0.0
-                total_climb = 0.0
-                for i in range(len(path) - 1):
-                    curr_idx = pf.pixel_to_idx(path[i][0], path[i][1])
-                    next_idx = pf.pixel_to_idx(path[i+1][0], path[i+1][1])
-                    total_dist += pf._heuristic(curr_idx, next_idx)
-                    
-                    # Calculate elevation change
-                    curr_elev = pf.dem[path[i]]
-                    next_elev = pf.dem[path[i+1]]
-                    climb = max(0, next_elev - curr_elev)
-                    total_climb += climb
-                
-                paths_data.append({
-                    'weight': weight,
-                    'path': path,
-                    'length': path_length,
-                    'distance': total_dist,
-                    'climb': total_climb,
-                    'time': elapsed
-                })
-                
-                print(f"✅ Path found: {path_length} nodes, {total_dist/1000:.2f}km, {total_climb:.0f}m climb")
-                print(f"   Time: {elapsed:.3f}s")
-            else:
-                print(f"❌ No path found")
+    paths_data = []
     
-    if not paths_data:
-        print("\n❌ No valid paths computed. Exiting.")
-        return
-    
-    # Visualization
+    for weight in weights:
+        print(f"\n--- Testing Weight: {weight} ---")
+        start_time = time.time()
+        
+        path = pf.pathfinding(start_pixel, end_pixel, heuristic_weight=weight)
+        
+        elapsed = time.time() - start_time
+        
+        if path:
+            path_length = len(path)
+            
+            # Calculate total distance
+            total_dist = 0.0
+            total_climb = 0.0
+            for i in range(len(path) - 1):
+                curr_idx = pf.pixel_to_idx(path[i][0], path[i][1])
+                next_idx = pf.pixel_to_idx(path[i+1][0], path[i+1][1])
+                total_dist += pf._heuristic(curr_idx, next_idx)
+                
+                # Calculate elevation change
+                curr_elev = pf.dem[path[i]]
+                next_elev = pf.dem[path[i+1]]
+                climb = max(0, next_elev - curr_elev)
+                total_climb += climb
+            
+            paths_data.append({
+                'weight': weight,
+                'path': path,
+                'length': path_length,
+                'distance': total_dist,
+                'climb': total_climb,
+                'time': elapsed
+            })
+            
+            print(f"✅ Path found: {path_length} nodes, {total_dist/1000:.2f}km, {total_climb:.0f}m climb")
+            print(f"   Time: {elapsed:.3f}s")
+        else:
+            print(f"❌ No path found")
     
     # Visualization
     print("\n" + "="*60)
@@ -347,36 +256,17 @@ if __name__ == "__main__":
         start_gps = (start_lat, start_lon)
         end_gps = (end_lat, end_lon)
         print(f"\n🎲 Random 10km path: Direction {math.degrees(direction):.1f}°")
+        end_gps = (base_lat, base_lon + 10 * deg_per_km_lon)
         
     elif choice == "2":
-        # 50km in random direction from random start
-        start_lat = random.uniform(safe_lat_min, safe_lat_max)
-        start_lon = random.uniform(safe_lon_min, safe_lon_max)
-        
-        direction = random.uniform(0, 2 * math.pi)
-        distance_km = 50.0
-        
-        end_lat = start_lat + (distance_km * math.cos(direction) * deg_per_km_lat)
-        end_lon = start_lon + (distance_km * math.sin(direction) * deg_per_km_lon)
-        
-        start_gps = (start_lat, start_lon)
-        end_gps = (end_lat, end_lon)
-        print(f"\n🎲 Random 50km path: Direction {math.degrees(direction):.1f}°")
+        # 50km northeast
+        start_gps = (base_lat, base_lon)
+        end_gps = (base_lat + 25 * deg_per_km_lat, base_lon + 43.3 * deg_per_km_lon)
         
     elif choice == "3":
-        # 100km in random direction from random start
-        start_lat = random.uniform(safe_lat_min, safe_lat_max)
-        start_lon = random.uniform(safe_lon_min, safe_lon_max)
-        
-        direction = random.uniform(0, 2 * math.pi)
-        distance_km = 100.0
-        
-        end_lat = start_lat + (distance_km * math.cos(direction) * deg_per_km_lat)
-        end_lon = start_lon + (distance_km * math.sin(direction) * deg_per_km_lon)
-        
-        start_gps = (start_lat, start_lon)
-        end_gps = (end_lat, end_lon)
-        print(f"\n🎲 Random 100km path: Direction {math.degrees(direction):.1f}°")
+        # 100km east
+        start_gps = (base_lat, base_lon)
+        end_gps = (base_lat, base_lon + 100 * deg_per_km_lon)
         
     elif choice == "4":
         print("\nEnter custom coordinates:")
@@ -388,21 +278,9 @@ if __name__ == "__main__":
         start_gps = (start_lat, start_lon)
         end_gps = (end_lat, end_lon)
     else:
-        print("Invalid choice. Using random 10km test.")
-        start_lat = random.uniform(safe_lat_min, safe_lat_max)
-        start_lon = random.uniform(safe_lon_min, safe_lon_max)
-        
-        direction = random.uniform(0, 2 * math.pi)
-        distance_km = 10.0
-        
-        end_lat = start_lat + (distance_km * math.cos(direction) * deg_per_km_lat)
-        end_lon = start_lon + (distance_km * math.sin(direction) * deg_per_km_lon)
-        
-        start_gps = (start_lat, start_lon)
-        end_gps = (end_lat, end_lon)
-        print(f"\n🎲 Random 10km path: Direction {math.degrees(direction):.1f}°")
+        print("Invalid choice. Using default 10km test.")
+        start_gps = (base_lat, base_lon)
+        end_gps = (base_lat, base_lon + 10 * deg_per_km_lon)
     
-    # Run visualization with multiple weights (multiprocessing enabled by default)
-    visualize_path_comparison(start_gps, end_gps, 
-                             weights=[1.0, 1.5, 2.0],
-                             use_multiprocessing=True)
+    # Run visualization with multiple weights
+    visualize_path_comparison(start_gps, end_gps, weights=[1.0, 1.5, 2.0])
