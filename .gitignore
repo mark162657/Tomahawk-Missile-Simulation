@@ -8,3 +8,18 @@ __pycache__/
 # Virtual environment
 venv/
 env/
+
+# Ignore IDE Settings (User-specific configs)
+.vscode/
+*.user
+
+# Ignore Build Folders
+build/
+cmake-build-debug/
+cmake-build-release/
+
+# Ignore Compiled Binaries (They differ per OS)
+*.so
+*.pyd
+*.dll
+*.dylib
