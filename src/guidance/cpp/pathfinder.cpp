@@ -140,7 +140,18 @@ private:
 
     // --- _reconstruct_path ---
     std::vector<std::pair<int, int>> reconstruct_path(const std::vector<int> $came_from, int current_idx=0) {
-        `
+        std::vector<std::pair<int, int>> path;
+
+        while (current_idx != -1) {
+            int row = current_idx / m_cols;
+            int col = current_idx % m_cols;
+
+            path.push_back({row, col});
+
+        }
+        std::reverse(path.begin(), path.end());
+        return path;
+
     }
 
 };
