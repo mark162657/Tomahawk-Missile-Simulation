@@ -2,7 +2,6 @@ from dataclasses import dataclass
 
 @dataclass
 class MissileProfile:
-
     """
     Unit:
         speed: m/s

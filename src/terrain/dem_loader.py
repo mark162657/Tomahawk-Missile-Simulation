@@ -57,7 +57,7 @@ class DEMLoader:
                 return elev if elev != self.nodata else None # return elevation if its not nodata
             return None
     
-        except Exception:
+        except Exception as e:
             return None
 
 

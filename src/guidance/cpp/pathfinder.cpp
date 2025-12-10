@@ -1,8 +1,8 @@
-#include <iostream>
-#include <pybind11/numpy.h>
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
-#include <vector>
+#include<iostream>
+#include<pybind11/numpy.h>
+#include<pybind11/pybind11.h>
+#include<pybind11/stl.h>
+#include<vector>
 #include<queue>
 #include<cmath>
 #include<algorithm>
@@ -127,6 +127,44 @@ public:
         return {}; // return None
     }
 
+    py::array_t<float> get_terrain_profile(py::array_t<float> row_path, py::array_t<float> col_path) {
+        // Getting access to input array
+        auto buffer_row = row_path.request();
+        auto buffer_col = col_path.request();
+
+        float* ptr_row = static_cast<float*>(buffer_row.ptr);
+        float* ptr_col = static_cast<float*>(buffer_col.ptr);
+
+        // get the size of the numpy array_t, we assume col and row have same size
+        size_t num_points = buffer_row.size;
+
+        // Prepare the result array
+        auto result = py::array_t<float>(num_points);
+        auto buffer_result = result.request();
+        float* ptr_result = static_cast<float*>(buffer_result.ptr);
+
+        // Main loop
+        for (size_t i = 0; i < num_points; ++i) {
+
+            float row_float = ptr_row[i];
+            float col_float = ptr_col[i];
+
+            // round to nearest pixel, use static_cast to convert to integer
+            // as DEM pixel coordinate are integer pair
+            int row = static_cast<int>(std::round(row_float));
+            int col = static_cast<int>(std::round(col_float));
+
+            // basic safety checks
+            if (row >= 0 && row < m_rows && col >= 0 && col < m_cols) {
+                // get height by ptr_dem[index]
+                ptr_result[i] = ptr_dem[row * m_cols + col];
+            } else {
+                ptr_result[i] = -9999.0f;
+            }
+        }
+        return result;
+    }
+
 // Helper Functions
 private:
     float* ptr_dem;
@@ -224,5 +262,6 @@ private:
 PYBIND11_MODULE(missile_backend, m) { // (module name, handle)
     py::class_<PathfinderCPP>(m, "PathfinderCPP")
         .def(py::init<py::array_t<float>, py::array_t<double>, double, int, int>()) // exposing constructors 
-        .def("find_path", &PathfinderCPP::find_path); // exposes the find_path method to python
+        .def("find_path", &PathfinderCPP::find_path) // exposes the find_path method to python
+        .def("get_terrain_profile", &PathfinderCPP::get_terrain_profile);
 }
