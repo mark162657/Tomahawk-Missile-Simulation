@@ -103,7 +103,7 @@ class DEMLoader:
         mean = np.mean(patch)
         std_dev = np.std(patch)
 
-        # normalised and add Epsilon (prevent division-by-zero, especially with a perfectly flat patch)
+        # normalised and add Epsilon (prevent    division-by-zero, especially with a perfectly flat patch)
         normalised_patch = (patch - mean) / (std_dev + 1e-6) # 1e-6, too small to affect data, but prevent division error
         return normalised_patch
 

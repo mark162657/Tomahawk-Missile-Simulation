@@ -8,7 +8,6 @@
 #include<algorithm>
 #include<limits>
 
-
 namespace py = pybind11;
 
 // Setting up priority queue Node (heap)
@@ -194,6 +193,12 @@ private:
         float current_elev = ptr_dem[current_idx];
         float neighbor_elev = ptr_dem[neighbor_idx];
 
+        // New: slope penalty for trying to force missile to stay in valley instead of taking lazy shortcut, risking exposure
+        float height_diff = abs(neighbor_elev - current_elev); // yeah its just like climb but with abs
+        float slope_penalty = height_diff * 5.0f;
+
+
+
         // No-data check
         if (current_elev <= -100.0f || neighbor_elev <= -100.0f) return std::numeric_limits<float>::infinity();
 
@@ -236,7 +241,7 @@ private:
             // penalty weight: high (100), the program will choose other path unless still the closest even with penalty
             penalty = climb * 100.0f; // apply a lot of penalty to very steep
         }
-        return dist_cost + penalty + height_penalty;
+        return dist_cost + penalty + height_penalty + slope_penalty;
     }
 
     // --- _reconstruct_path ---

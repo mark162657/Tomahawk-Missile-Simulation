@@ -21,7 +21,7 @@ The project focuses on realistic simulation of missile guidance over digital ele
 - A* pathfinding over terrain with elevation constraints
 - Proportional navigation guidance toward target
 
-**Tech Stack:** Python 3.10+ | NumPy | rasterio | matplotlib
+**Tech Stack:*e* Python 3.10+ | NumPy | rastereeio | matplotlib
 
 ---
 <!-- 
