@@ -35,8 +35,8 @@ class Pathfinding:
         self.rows = self.dem_loader.shape[0] # shape: (rows, columns)
         self.cols = self.dem_loader.shape[1]
 
-        # z-axis (latitude) resolution, meter per pixel
-        self.meter_per_z = abs(self.dem_loader.transform[4] * 111320)
+        # y-axis (latitude) resolution, meter per pixel. Previously meter_per_z
+        self.meter_per_y = abs(self.dem_loader.transform[4] * 111320)
 
         start_lat = self.dem_loader.transform[5]
         pixel_height = self.dem_loader.transform[4]
@@ -64,7 +64,7 @@ class Pathfinding:
             self.engine = missile_backend.PathfinderCPP(
                 self.dem,
                 self.meters_per_x_lookup,
-                self.meter_per_z,
+                self.meter_per_y,
                 self.rows,
                 self.cols
             )
@@ -130,12 +130,12 @@ class Pathfinding:
     
     def get_3d_path_points(self, pixel_path: list) -> list:
         """
-        Converts pixel path to 3D World Coordinates (Y-Up).
+        Converts pixel path to 3D World Coordinates (Z-Up Physics Standard).
         Format: [(x, y, z), ...]
 
         x = Longitude (Meters relative to top-left)
-        y = Altitude (Meters above sea level - from DEM)
-        z = Latitude (Meters relative to top-left)
+        y = Latitude (Meters relative to top-left) - Previously Z
+        z = Altitude (Meters above sea level - from DEM) - Previously Y
 
         Arg:
             - pixel_path: the list that contains the path (by pixels) found by pathfinding algorithm
@@ -145,15 +145,15 @@ class Pathfinding:
         path_3d = []
         
         for row, col in pixel_path:
-            # Y = Altitude
+            # Z = Altitude
             altitude = float(self.dem[row, col]) # self.dem[] to obtain the pixel's altitude 
             
-            # Z = Latitude displacement (row * meters_per_z)
-            z_pos = row * self.meter_per_z
+            # Y = Latitude displacement (row * meters_per_y)
+            y_pos = row * self.meter_per_y
             
             # X = Longitude displaceemnt (col * meter_per_x_lookup)
             x_pos = col * self.meters_per_x_lookup[row]
             
-            path_3d.append((x_pos, altitude, z_pos))
+            path_3d.append((x_pos, y_pos, altitude))
             
         return path_3d
