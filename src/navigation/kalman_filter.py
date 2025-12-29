@@ -39,7 +39,7 @@ class KalmanFilter:
 
         # Process noise covariance matrix (Q)
         # internal uncertainty: how weather / physic disturb the missile
-        self.Q = self.Q = (self.B @ self.B.T) * (process_noise_std ** 2) # projecting acceleration noise through the physical control paths
+        self.Q = (self.B @ self.B.T) * (process_noise_std ** 2) # projecting acceleration noise through the physical control paths
 
         # Sensor noise covariance matrix (R)
         # scenario 1: GPS (+/- 2.5m. Vertical is usually 1.5x worse.)
@@ -53,7 +53,7 @@ class KalmanFilter:
         # scenario 3: default to GPS (most cases for accuracy, TERCOM serve as a helper)
         self.R = self.R_GPS
 
-        # Error covariance matrix
+        # Process covariance matrix
         # we assume we are not very certain where we are (~50m initial error)
         self.P = np.eye(6) * 100 # * 100 as we assume 100m drift, can be adjusted accordingly
 
@@ -64,7 +64,7 @@ class KalmanFilter:
         # Predictive state x = Ax + Bu:
         self.x = (self.A @ self.x) + (self.B @ u)
         
-        # Covariance prediction P = AP * A.T + Q: 
+        # Predicted process covariance matrix P = AP * A.T + Q: 
         self.P = (self.A @ self.P @ self.A.T) + self.Q
 
     def update(self, measurement, sensor_type="GPS": str):
@@ -75,12 +75,13 @@ class KalmanFilter:
             R_current = self.R_GPS
 
 
-        # Calculate
- 
+        # Handle Measurement
+        y = np.array(measurement)
+
+        # Error = measurement - expected position
+        error = y - (self.H @ self.x)
+    
         # Kalman gain (KG)
-        KG = self.P @ self.H.T @ np.linalg.inv((H @ self.P @ H.T) + R_current)
-        
+        KG = self.P @ self.H.T @ np.linalg.inv((H @ self.P @ H.T) + R_current) # use np.linalg.inv() to sorta acheive division (x inverse)
 
-
-
-        
+        # Update current state    
