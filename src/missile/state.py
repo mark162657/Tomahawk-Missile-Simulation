@@ -20,7 +20,7 @@ class MissileState:
     # positional fields
     x: float
     y: float
-    z: float
+    z: float # this is the altitude, not y
 
     # velocity
     vx: float
@@ -33,7 +33,7 @@ class MissileState:
     heading: float
 
     # navigation & guidance
-    long: float
+    lon: float
     lat: float
     altitude: float
 
@@ -44,7 +44,7 @@ class MissileState:
     # guidance system state
     gps_valid: bool
     tercom_active: bool
-    ins_active: bool
+    ins_calibrated: bool
 
     # tracking
     distance_traveled: float

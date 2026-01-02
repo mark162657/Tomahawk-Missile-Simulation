@@ -13,7 +13,7 @@ import fastplotlib as fpl
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent))
 
-from guidance.pathfinding import Pathfinding
+from ..src.guidance.pathfinding_backend import Pathfinding
 
 
 def visualize_path_fastplotlib(start_gps: tuple[float, float], end_gps: tuple[float, float], 

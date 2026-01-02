@@ -16,8 +16,7 @@ import fastplotlib as fpl
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent))
 
-from guidance.pathfinding import Pathfinding
-from src.terrain.dem_loader import DEMLoader
+from ..src.terrain.dem_loader import DEMLoader
 
 
 class Fastplotlib2DDEMViewer:
