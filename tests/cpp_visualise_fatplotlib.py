@@ -14,9 +14,9 @@ import fastplotlib as fpl
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 # UPDATED IMPORTS
-from ..src.guidance.pathfinding_backend import Pathfinding
-from ..src.guidance.trajectory import TrajectoryGenerator
-
+sys.path.insert(0, str(Path(__file__).parent.parent))
+from src.guidance.pathfinding_backend import Pathfinding
+from src.guidance.trajectory import TrajectoryGenerator
 def calculate_geo_distance(p1, p2):
     """Simple Euclidean distance for stats (using lat/lon approx)"""
     # Note: This is a rough approx for visualization stats only.

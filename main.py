@@ -2,6 +2,7 @@ import sys
 import time
 import math
 import re
+import json
 import numpy as np
 from pathlib import Path
 import fastplotlib as fpl
@@ -76,6 +77,39 @@ def parse_gps_input(gps_input: str) -> tuple[float, float]:
         lon = abs(lon)
 
     return lat, lon
+
+def parse_custom_profile(current_data):
+    print_header("Custom Missile Configuration")
+    profile = current_data.copy()
+    profile["name"] = "Custom Configuration"
+
+    print("   [INFO] Press ENTER to keep default values.\n")
+    print("   -------------------------------------------")
+
+    try:
+        for key, default in profile.items():
+            if key == "name": continue
+
+            # Replace _ in label with space for readability
+            label = key.replace('_', ' ').title()
+            unit = ""
+            # Basically detect keywords in keys and set corresponding unit (user-end)
+            if "speed" in key: unit = "(km/h)"
+            elif "rate" in key: unit = "(deg/s)"
+            elif "altitude" in key: unit = "(m)"
+            elif "force" in key: unit = "(G)"
+
+            val = input(f"   >> {label} {unit} [{default}]: ").strip()
+            if val:
+                profile[key] = float(val)
+
+    except ValueError:
+        # Opps! (tryna keep as professional as possible)
+        print("\n      [!] Invalid number entered. Aborting changes.")
+        time.sleep(1)
+        return None
+    return profile
+
 
 def get_path_distance(trajectory: list[float, float, float]) -> float:
     """
@@ -175,7 +209,6 @@ def create_missile_profile(data: dict) -> MissileProfile:
         evasive_turn_rate = data["evasive_turn_rate"] * DEG_TO_RAD,
     )
 
-def get_custom_profile（
 # ----------------------------------------------
 
 class MissileSimulation:
@@ -197,7 +230,20 @@ class MissileSimulation:
 
         # Initiate pathfinding through Pyhton backend (as an intermediate between CPP and simulation)
         self.pf = Pathfinding(self.dem_name)
-        self.trajectory = TrajectoryGenerator(self.pf.engine, self.pf.dem_loader)
+        self.traj_gen = TrajectoryGenerator(self.pf.engine, self.pf.dem_loader)
+
+        # Generate actual path (with pixels from pathfinding)
+        start_pixel = self.dem_loader.lat_lon_to_pixel(*self.start_gps)
+        target_pixel = self.dem_loader.lat_lon_to_pixel(*self.target_gps)
+
+        # Run the pathfinder and save it to raw_path
+        print(f"   [INFO] Planning route...")
+        raw_path = self.pf.find_path(start_pixel, target_pixel)
+
+        if raw_path:
+            self.trajectory = self.traj_gen.get_trajectory(start_pixel, target_pixel)
+        else:
+            self.trajectory = []
 
         # Define initial state
         self.missile_state = MissileState(x=0, y=0, z=init_z,
@@ -212,9 +258,8 @@ class MissileSimulation:
         pass
 
 
-
-
-# --- MAIN ENTRY POINT ---
+# --- MAIN ENTRY POINT (Gemini Assisted piece of junk) ---
+# i seriously hate ui, visualisation...
 if __name__ == "__main__":
 
     # 1. System Configuration State
@@ -222,22 +267,22 @@ if __name__ == "__main__":
         "dem_name": "merged_dem_sib_N54_N59_E090_E100.tif",
         "start_gps": None,
         "target_gps": None,
-        "missile_type": TOMAHAWK_BLOCK_V.copy()
+        "missile_profile": TOMAHAWK_BLOCK_V.copy()
     }
 
     while True:
         clear_screen()
-        print_header("GNC Simulation Console - Main Menu")
+        print_header("Cruise Missile Simulation Console - Main Menu")
 
-        # Format status strings for display
+        # Format status strings (GPS coordinates) for display
         s_gps_str = f"{config['start_gps']}" if config['start_gps'] else "[ NOT SET ]"
         t_gps_str = f"{config['target_gps']}" if config['target_gps'] else "[ NOT SET ]"
 
-        # Main Menu Options
+        # Main menu options (level 0)
         print(f"   1. Set Terrain File      [{config['dem_name']}]")
         print(f"   2. Set Coordinates       [Start: {s_gps_str}]")
         print(f"                            [Target: {t_gps_str}]")
-        print(f"   3. Missile Configuration [{config['missile_type']}]")
+        print(f"   3. Missile Configuration [{config['missile_profile']}]")
         print("   -----------------------------------------------------------------")
         print(f"   4. INITIALIZE & LAUNCH")
         print(f"   5. Exit Console")
@@ -265,6 +310,7 @@ if __name__ == "__main__":
                 clear_screen()
                 print_header("Coordinate Configuration")
 
+                # If start_gps is none, print "NOT SET"
                 curr_start = config['start_gps'] if config['start_gps'] else "NOT SET"
                 curr_target = config['target_gps'] if config['target_gps'] else "NOT SET"
 
@@ -275,9 +321,10 @@ if __name__ == "__main__":
 
                 sub_choice = input("\n   >> Select Option [1-3]: ").strip()
 
+                # You gotta know where you are and where's your target right?
                 if sub_choice == '1':
                     print("\n   --- Input Launch Site ---")
-                    # Loops until valid using existing parse function
+                    # Loops until valid using existing parse function, or user simply rage quit
                     res = prompt_gps_loop("Enter GPS")
                     if res: config['start_gps'] = res
 
@@ -292,22 +339,31 @@ if __name__ == "__main__":
         # --- OPTION 3: MISSILE PROFILE ---
         elif choice == '3':
             while True:
+                data = config["missile_profile"]
                 clear_screen()
                 print_header("Missile Profile Selection")
-                print(f"   Current Profile: {config['missile_type']}\n")
+                print(f"   Current Profile: {config['missile_profile']}\n")
 
-                print("   1. Load Custom Profile (Function Pending)")
-                print("   2. Load Preset: Tomahawk Block IV")
+                print("   1. Add Cusstom Profile")
+                print("   2. Load Presets")
                 print("   3. Return to Main Menu")
                 print("\n" + "=" * 65)
 
                 sub_choice = input("\n   >> Select Option [1-3]: ").strip()
 
                 if sub_choice == '1':
-                    print("\n      [INFO] Custom profile loader is under development.")
-                    time.sleep(1.5)
+                    custom_data = parse_custom_profile(data)
+
+                    if custom_data:
+                        config['missile_profile'] = custom_data
+                        print("\n      [OK] Custom Profile Applied.")
+                        time.sleep(1)
+
                 elif sub_choice == '2':
-                    config['missile_type'] = "Tomahawk Block IV (Preset)"
+                    print_header("Presets Selection (Note: Based On Public Data Only)")
+                    print("   Due to lack of funding, we only got Tomahawk Block V available.")
+                    print("   Agent 008 is on his way to steal some other missiles...")
+                    config['missile_profile'] = "Tomahawk Block V (Preset)"
                     print("\n      [OK] Preset Loaded.")
                     time.sleep(1)
                     break
@@ -324,7 +380,7 @@ if __name__ == "__main__":
 
             print_header("Mission Pre-Flight Check")
             print(f"   Terrain: {config['dem_name']}")
-            print(f"   Profile: {config['missile_type']}")
+            print(f"   Profile: {config['missile_profile']}")
             print(f"   Launch:  {config['start_gps']}")
             print(f"   Target:  {config['target_gps']}")
             print("-" * 65)
