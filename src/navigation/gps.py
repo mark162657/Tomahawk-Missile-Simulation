@@ -1,44 +1,74 @@
 import numpy as np
 import math
+
 from ..terrain.dem_loader import DEMLoader
+from ..control.timer import InternalTimer
+from ..sensors.gps_sensor import GPSSensor
 
 class GPS:
-    def __init__(self, horizontal_accuracy: float, vertical_accuracy: float, update_freq: int=1):
+    def __init__(self, update_freq: int=1):
         """
         Assume (feature might be added in future, depends):
             - signal travel time does not exists + processing delay
             - PPS + WAGE enhancement signal (acheiving around 1 meter accuracy)
             - ignore signal processing layer, solved triangulation and output Cartesian coordinates (x, y, z) directly
         """
-        
-        self.update_freq = update_freq
-        self.horizontal_accuracy = horizontal_accuracy
-        self.vertical_accuracy = vertical_accuracy
 
+        # Time related stuff
+        self.time_interval = 1.0 / update_freq # fix amount of time (sec) between each consecutive GPS update
+        self.timer = InternalTimer() # setup an InternalTimer class for time-related operations
+        self.last_update_time = -float("inf") # the time which last GPS adjustment / fix was performed
+
+        # DEM operation
         dem = DEMLoader()
         self.dem_laoder = dem
 
-    def get_measurement(self, current_position: tuple[int, int]):
-        """
-        We accept the "perfect" true position, add it to the error/drift and return the simulated non-perfect
-        GPS location.
+        # Check if GPS is active and jammed or not
+        self.has_signal = True
+        self.is_jammed = False
 
+        # GPS sensor
+        self.sensor = GPSSensor()
+
+    def is_ready(self) -> bool:
+        """
+        Check if GPS is ready for next measurement by:
+            1. Check if GPS has signal
+            2. Minus the current time by the last timestamp which we update
+                our GPS state, and see if its time interval exceeds our standard fixed time interval
+                between each measurement.
         Args:
-            - current_position: (row, col) tuple
+            - current_time: current time recorded in our InternalTimer system
         """
-        curr_lat, curr_lon = self.dem_loader.pixel_to_lat_lon(current_position[0], current_position[1])
-        position = [curr_lat, curr_lon]
 
+        if not self.has_signal:
+            return False
 
+        current_time = self.timer.get_current_time()
 
+        # Return if time elapsed since last GPS check is greater than the time_interval (see __init__ for definition)
+        return (current_time - self.last_update_time) >= self.time_interval
 
+    def get_gps_location(self, location: list[float, float]) -> list[float, float]:
+        if not self.is_ready():
+            return None, None
 
+        # Pull measurement data from GPS sensor
+        raw_measurement = self.sensor.get_raw_measurement(location)
 
-    def is_ready(self, current_time):
+        # if self.detect_jammed(raw_measurement):
+        #     self.is_jammed = True
+        #     return None
+
+        self.last_update_time = self.timer.get_elapsed_time()
+        return raw_measurement
+
+    def detect_jammed(self, measurement: np.ndarray) -> bool:
+        """TODO: Future implementation"""
         pass
 
-    def is_jammed(self) -> bool:
-        pass
+
+
 
         
 

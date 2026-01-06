@@ -1,4 +1,4 @@
-class TERCOMSensor:
+class TERCOM:
     """
     TERCOM (Terrain Contour Matching): A navigation system that guides missiles by
     comparing ground elevation profiles measured by radar altimeter with pre-stored

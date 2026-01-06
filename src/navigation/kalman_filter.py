@@ -36,23 +36,23 @@ class KalmanFilter:
         self.B[4, 1] = self.dt
         self.B[5, 2] = self.dt
 
-        # Observation matrix (H) 
-        # maps the 6 variable internal state to the 3 variable sensor measurement space, selecting only positional components, ignore velocities
-        # a transformation matrix
-        self.H = zeros((3, 6))
-        self.H[0, 0] = 1  # Observe x
-        self.H[1, 1] = 1  # Observe y
-        self.H[2, 2] = 1  # Observe z
+        # Observation matrix (H) - transformation matrix
+        # maps the 6 variable internal state to the 3 variable sensor measurement space, selecting only
+        # positional components, ignore velocities
+        self.H = np.zeros((3, 6))
+        self.H[0, 0] = 1  # observe x
+        self.H[1, 1] = 1  # observe y
+        self.H[2, 2] = 1  # observe z
 
         # Process noise covariance matrix (Q)
         # internal uncertainty: how weather / physic disturb the missile
         self.Q = (self.B @ self.B.T) * (process_noise_std ** 2) # projecting acceleration noise through the physical control paths
 
         # Sensor noise covariance matrix (R)
-        # scenario 1: GPS (+/- 1m with WAGE enhancement, vertical is usually 1.5x worse.)
+        # Scenario 1: GPS (+/- 1m with WAGE enhancement, vertical is usually 1.5x worse.)
         self.R_GPS = np.diag([1 ** 2, 1.5 ** 2, 1 ** 2])
 
-        # scenario 2: TERCOM (12m deviation)
+        # Scenario 2: TERCOM (12m deviation)
         # lateral Accuracy: +/- 10-15m (Grid dependent)
         # vertical Accuracy: Radar Altimeter is very precise (+/- 1m), according to the vegetation and landscape.
         self.R_TERCOM = np.diag([12.0 ** 2, 4.0 ** 2, 2.5 ** 2])
