@@ -60,12 +60,6 @@ class CoordinateSystem:
     def get_heading(self, lat1: float, long1: float, lat2: float, long2: float) -> float:
 
         """
-
-        Return:
-
-
-        Based on: Source - https://stackoverflow.com/questions/54873868/python-calculate-bearing-between-two-lat-long
-        Retrieved 2025-11-10, License - CC BY-SA 4.0
         """
 
         dLon = (long2 - long1)
@@ -76,7 +70,6 @@ class CoordinateSystem:
 
         return bearing
 
-    if __name__ == '__main__':
-        from coordinates import CoordinateSystem
-        pass
+if __name__ == '__main__':
+    pass
 

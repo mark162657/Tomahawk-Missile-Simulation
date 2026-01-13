@@ -1,3 +1,7 @@
+"""
+Responsible
+"""
+
 import numpy as np
 import matplotlib.pyplot as plt
 import rasterio
@@ -5,8 +9,6 @@ import rasterio
 from pathlib import Path
 from rasterio.transform import rowcol, xy
 from matplotlib.colors import LinearSegmentedColormap, LightSource
-
-
 
 class DEMLoader:
     """Loads and queries elevation data from a single SRTM file."""
@@ -97,13 +99,15 @@ class DEMLoader:
 
         return patch
 
-
     def _normalised_patch(self, patch: np.ndarray) -> np.ndarray[float]:
+        """
+
+        """
         patch.astype(float)
         mean = np.mean(patch)
         std_dev = np.std(patch)
 
-        # normalised and add Epsilon (prevent    division-by-zero, especially with a perfectly flat patch)
+        # normalised and add Epsilon (prevent error of division-by-zero, especially with a perfectly flat patch)
         normalised_patch = (patch - mean) / (std_dev + 1e-6) # 1e-6, too small to affect data, but prevent division error
         return normalised_patch
 
@@ -117,12 +121,6 @@ class DEMLoader:
         """Convert pixel to GPS coordinates."""
         lon, lat = xy(self.transform, row, col)
         return lat, lon
-
-
-    def close(self):
-        """Cleanup (data already loaded, but keeps interface consistent)."""
-        pass
-
 
 # Quick test
 if __name__ == "__main__":

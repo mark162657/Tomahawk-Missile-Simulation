@@ -1,1 +1,1 @@
-from .gps_sensor import GPSSensor
+from .gps_receiver import GPSSensor

@@ -294,7 +294,7 @@ class MissileSimulation:
                 planned_path=local_path_meters,
                 dem_file=self.dem_name,
                 origin=self.start_gps,
-                title=f"Planned Trajectory Analysis",
+                title=f"Planned Trajectory Analysis (under development)",
                 downsample=2
             )
         except Exception as e:
@@ -334,6 +334,7 @@ if __name__ == "__main__":
         print(f"                            [Target: {t_gps_str}]")
         print(f"   3. Missile Configuration [{config['missile_profile']}]")
         print("   -----------------------------------------------------------------")
+        print("    4. Calculate Path ")
         print(f"   5. INITIALIZE & LAUNCH")
         print(f"   6. Exit Console")
         print("\n" + "=" * 65)

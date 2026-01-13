@@ -37,6 +37,7 @@ class MissileProfile:
 
         Args:
             - speed: current speed m/s
+            - turn_rate: current turn rate
 
         Return:
             - turning radius (m): prevent km / m unit confusion
@@ -50,7 +51,8 @@ class MissileProfile:
         """
         Get max lateral acceleration based on max g-force
 
-        Returns: lateral acceleration (m/s^2)
+        Return:
+            - lateral acceleration (m/s^2)
         """
         g = 9.80665
         return g * self.max_g_force
@@ -59,6 +61,7 @@ class MissileProfile:
         # Check speed limits
         if not (self.min_speed <= current_speed <= self.max_speed):
             return False
+
         # Check turn rates
         max_allowed_turn_rate = max(self.sustained_turn_rate, self.sustained_g_force)
         if turn_rate > max_allowed_turn_rate:

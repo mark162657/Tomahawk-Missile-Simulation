@@ -3,7 +3,7 @@ import math
 
 from ..terrain.dem_loader import DEMLoader
 from ..control.timer import InternalTimer
-from ..sensors.gps_sensor import GPSSensor
+from ..sensors.gps_receiver import GPSReceiver
 
 class GPS:
     def __init__(self, update_freq: int=1):
@@ -27,8 +27,8 @@ class GPS:
         self.has_signal = True
         self.is_jammed = False
 
-        # GPS sensor
-        self.sensor = GPSSensor()
+        # GPS receiver
+        self.receiver = GPSReceiver()
 
     def is_ready(self) -> bool:
         """
@@ -53,8 +53,8 @@ class GPS:
         if not self.is_ready():
             return None, None
 
-        # Pull measurement data from GPS sensor
-        raw_measurement = self.sensor.get_raw_measurement(location)
+        # Pull measurement data from GPS receiver
+        raw_measurement = self.receiver.get_raw_measurement(location)
 
         # if self.detect_jammed(raw_measurement):
         #     self.is_jammed = True

@@ -64,6 +64,7 @@ class KalmanFilter:
     
     def predict(self, acc_input: list[float]) -> None:
         """
+        Generate prediction of the next location of the missile, based on speed, acceleration, current position...
         Arg:
             acc_input: list[x, y, z]
         """
@@ -76,6 +77,10 @@ class KalmanFilter:
         self.P = (self.A @ self.P @ self.A.T) + self.Q
 
     def update(self, measurement: list[float], sensor_type: str="GPS") -> None:
+        """
+        Update the position of the missile, combining measurement and prediction result, use Kalman Gain to determine
+        which to trust more.
+        """
         # Set the R matrix to different value based on sensor_type
         if sensor_type == "TERCOM":
             R_current = self.R_TERCOM
@@ -89,7 +94,7 @@ class KalmanFilter:
         error = y - (self.H @ self.x)
     
         # Kalman gain (KG)
-        KG = self.P @ self.H.T @ np.linalg.inv((self.H @ self.P @ H.T) + R_current) # use np.linalg.inv() to sorta acheive division (x inverse)
+        KG = self.P @ self.H.T @ np.linalg.inv((self.H @ self.P @ self.H.T) + R_current) # use np.linalg.inv() to sorta acheive division (x inverse)
 
         # Update state (x)
         self.x = self.x + (KG @ error)

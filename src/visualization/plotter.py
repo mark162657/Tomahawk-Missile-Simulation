@@ -1,11 +1,11 @@
-# src/visualization/plotter.py
 
 import matplotlib.pyplot as plt
 import numpy as np
+import math
+
 from matplotlib.gridspec import GridSpec
 from matplotlib.colors import LinearSegmentedColormap, LightSource
 from pathlib import Path
-import math
 
 # Attempt to import DEMLoader
 try:
