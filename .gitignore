@@ -12,6 +12,7 @@ env/
 # Ignore IDE Settings (User-specific configs)
 .vscode/
 *.user
+.cache/
 
 # Ignore Build Folders
 build/
