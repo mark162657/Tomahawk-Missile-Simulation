@@ -2,7 +2,9 @@ import numpy as np
 
 class KalmanFilter:
     def __init__(self, dt: float, init_position: list[float], init_velocity: list[float], process_noise_std: float, std_mea: float=0.05) -> None:
-
+        """
+        Set up the Kalman filter with the necessary intial and default matrices.
+        """
         # Sampling time
         self.dt = dt
 
@@ -37,8 +39,6 @@ class KalmanFilter:
         self.B[5, 2] = self.dt
 
         # Observation matrix (H) - transformation matrix
-        # maps the 6 variable internal state to the 3 variable sensor measurement space, selecting only
-        # positional components, ignore velocities
         self.H = np.zeros((3, 6))
         self.H[0, 0] = 1  # observe x
         self.H[1, 1] = 1  # observe y
@@ -46,7 +46,7 @@ class KalmanFilter:
 
         # Process noise covariance matrix (Q)
         # internal uncertainty: how weather / physic disturb the missile
-        self.Q = (self.B @ self.B.T) * (process_noise_std ** 2) # projecting acceleration noise through the physical control paths
+        self.Q = (self.B @ self.B.T) * (process_noise_std ** 2)
 
         # Sensor noise covariance matrix (R)
         # Scenario 1: GPS (+/- 1m with WAGE enhancement, vertical is usually 1.5x worse.)
@@ -59,12 +59,12 @@ class KalmanFilter:
 
         # Process covariance matrix
         # we assume we are not very certain where we are (~50m initial error)
-        self.P = np.eye(6) * 100 # * 100 as we assume 100m drift, can be adjusted accordingly
+        self.P = np.eye(6) * 100
 
     
     def predict(self, acc_input: list[float]) -> None:
         """
-        Generate prediction of the next location of the missile, based on speed, acceleration, current position...
+        Generate a prediction of the next location of the missile, based on speed, acceleration, current position...
         Arg:
             acc_input: list[x, y, z]
         """

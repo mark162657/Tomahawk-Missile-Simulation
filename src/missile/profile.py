@@ -28,8 +28,6 @@ class MissileProfile:
 
     # evasive jink (high-g evasion)
     evasive_turn_rate: float
-    # evasive_g_force will be max_g_force
-
 
     def calculate_turning_radius(self, speed: float, turn_rate: float) -> float:
         """

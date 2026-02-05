@@ -79,7 +79,6 @@ class MissileState:
         """
 
         # Velocity by formula: v_t = v_0 + a * t
-        # new velocity equals the current velocity + acceleration * time
         self.vx += acceleration[0] * dt
         self.vy += acceleration[1] * dt
         self.vz += acceleration[2] * dt
@@ -93,10 +92,8 @@ class MissileState:
         self.heading += (heading_rate * dt)
         self.heading %= (2 * math.pi)
 
-        # Time
         self.time += dt
 
-        # Distance travelled
         self.distance_traveled += self.get_speed() * dt
 
         # z-up: z represents altitude, matching that in the pathfinding and trajectory.py

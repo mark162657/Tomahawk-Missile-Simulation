@@ -48,8 +48,3 @@ class GPSReceiver():
         ])
 
         return true_pos + noise
-
-
-
-
-
