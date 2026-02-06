@@ -46,38 +46,20 @@ class TERCOM:
         current_time = self.timer.get_current_time()
         return (current_time - self.last_update_time) >= self.time_interval
 
-    def process_update(self, sensed_patch, est_lat, est_lon, search_size: int=90):
+    def process_update(self, sensed_patch: np.ndarray, est_lat: float, est_lon: float, search_size: int=125):
         """
         We already obtained the normalized sensed patch 7 * 7 grid underneath our missile, now we will
         search for the certain grid size from our tif for pattern and determine where we might have been.
 
         """
         if not self.is_ready():
-            return None, None
-
-        db_search_area = self.dem_loader.get_search_area(est_lat, est_lon, search_size)
-
-        if db_search_area is None or db_search_area[0] < 7 or db_search_area[1] < 7:
             return None, None, None
 
         self.last_time_update = self.timer.get_current_time()
 
+        db_search_patch = self.dem_loader.get_search_area(est_lat, est_lon, search_size, normalized=False)
+        snsr_patch_height, snsr_patch_width = sensed_patch.shape
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        best_correlation = -1.0 # -1.0 ~ 1.0
+        best_offset = (0, 0)
+        found_match = False

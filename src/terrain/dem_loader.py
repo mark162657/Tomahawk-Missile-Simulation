@@ -63,7 +63,7 @@ class DEMLoader:
             return None
 
 
-    def get_elevation_patch(self, lat: float, lon: float, patch_size=7) -> np.ndarray[float]:
+    def get_elevation_patch(self, lat: float, lon: float, patch_size=7, normalized=True) -> np.ndarray[float]:
         """
         Getting a 7 x 7 patch around the centre coordinate (where the missile is located at).
         The patch will later be passed down for TERCOM navigation using Kalman filter.
@@ -95,28 +95,10 @@ class DEMLoader:
         patch = self.data[row_start:row_end, col_start:col_end]
 
         # normalise the data (z-score normalisation):
-        patch = self._normalised_patch(patch)
+        if normalized:
+            patch = self._normalised_patch(patch)
 
         return patch
-
-    def get_raw_patch(self, lat: float, lon: float, patch_size: int) -> np.ndarray | None:
-        """
-        Retrieves a raw (un-normalized) elevation patch from the DEM.
-        Used for the TERCOM sliding window search.
-        """
-        pixel_row, pixel_col = self.lat_lon_to_pixel(lat, lon)
-        half = patch_size // 2
-
-        row_start = max(0, pixel_row - half)
-        row_end = min(self.shape[0], pixel_row + half + 1)
-        col_start = max(0, pixel_col - half)
-        col_end = min(self.shape[1], pixel_col + half + 1)
-
-        if row_start >= row_end or col_start >= col_end:
-            return None
-
-        # Return raw elevation data
-        return self.data[row_start:row_end, col_start:col_end].astype(float)
 
     def _normalised_patch(self, patch: np.ndarray) -> np.ndarray[float]:
         """
