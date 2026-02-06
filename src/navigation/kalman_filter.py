@@ -57,8 +57,7 @@ class KalmanFilter:
         # vertical Accuracy: Radar Altimeter is very precise (+/- 1m), according to the vegetation and landscape.
         self.R_TERCOM = np.diag([12.0 ** 2, 4.0 ** 2, 2.5 ** 2])
 
-        # Process covariance matrix
-        # we assume we are not very certain where we are (~50m initial error)
+        # Process covariance matrix (~50m initial error)
         self.P = np.eye(6) * 100
 
     

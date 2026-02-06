@@ -3,7 +3,6 @@ import numpy as np
 
 from ..control.timer import InternalTimer
 from ..terrain.dem_loader import DEMLoader
-from ..control import *
 
 class TERCOM:
     """
@@ -46,7 +45,7 @@ class TERCOM:
         current_time = self.timer.get_current_time()
         return (current_time - self.last_update_time) >= self.time_interval
 
-    def process_update(self, sensed_patch: np.ndarray, est_lat: float, est_lon: float, search_size: int=125):
+    def process_update(self, sensed_patch: np.ndarray, est_lat: float, est_lon: float, search_size: int=125) -> tuple[float, float, float]:
         """
         We already obtained the normalized sensed patch 7 * 7 grid underneath our missile, now we will
         search for the certain grid size from our tif for pattern and determine where we might have been.
@@ -57,9 +56,53 @@ class TERCOM:
 
         self.last_time_update = self.timer.get_current_time()
 
+        center_row, center_col = self.dem_loader.lat_lon_to_pixel(est_lat, est_lon)
+        half_search = search_size // 2
+        row_start = max(0, center_row - half_search)
+        col_start = max(0, center_col - half_search)
+
         db_search_patch = self.dem_loader.get_search_area(est_lat, est_lon, search_size, normalized=False)
         snsr_patch_height, snsr_patch_width = sensed_patch.shape
 
         best_correlation = -1.0 # -1.0 ~ 1.0
         best_offset = (0, 0)
         found_match = False
+
+        db_row, db_col = db_search_patch.shape
+        for r in range(db_row - snsr_patch_height + 1): # vertical movement
+            for c in range(db_col - snsr_patch_width + 1): # horizontal
+                sub_patch = db_search_patch[r: r + snsr_patch_height, c : c + snsr_patch_width] # extract 7 * 7 chunk
+                norm_sub_patch = self.dem.normalize_patch(sub_patch)
+
+                # Get NCC
+                correlation = np.mean(sensed_patch * norm_sub_patch)
+
+                if correlation > best_correlation:
+                    best_correlation = correlation
+                    found_match = True
+                    best_offset = (r + snsr_patch_height // 2, c + snsr_patch_width // 2) # best matched middle pixel
+
+        if found_match and best_correlation > 0.6:
+            # Add best_offset (local patch) to the rest of the larger map, to get exact coordinate pixel
+            matched_row = row_start + best_offset[0]
+            matched_col = col_start + best_offset[1]
+
+            # Turn row/col into lat/lon
+            matched_lat, matched_lon = self.dem_loader.pixel_to_lat_lon(matched_row, matched_col)
+
+            return matched_lat, matched_lon, self.get_noise_covariance() # get lat/lon coordinate and also the noise
+
+        return None, None, None
+
+    def get_noise_covariance(self) -> np.ndarray:
+        """
+        Calculates the noise covariance matrix.
+        The noises are represented as a diagonal in the 3D matrix
+
+        """
+        return np.diag([
+            self.lateral_accuracy ** 2,
+            self.lateral_accuracy ** 2,
+            self.vertical_accuracy ** 2
+        ])
+
