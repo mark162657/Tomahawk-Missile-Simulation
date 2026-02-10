@@ -1,9 +1,9 @@
 import numpy as np
 import math
 
-from ..terrain.dem_loader import DEMLoader
-from ..control.timer import InternalTimer
-from ..sensors.gps_receiver import GPSReceiver
+from src.terrain.dem_loader import DEMLoader
+from src.control.timer import InternalTimer
+from src.sensors.gps_receiver import GPSReceiver
 
 class GPS:
     def __init__(self, update_freq: int=1):
@@ -19,9 +19,8 @@ class GPS:
         self.timer = InternalTimer() # setup an InternalTimer class for time-related operations
         self.last_update_time = -float("inf") # the time which last GPS adjustment / fix was performed
 
-        # DEM operation
         dem = DEMLoader()
-        self.dem_laoder = dem
+        self.dem_loader = dem
 
         # Check if GPS is active and jammed or not
         self.has_signal = True
@@ -44,7 +43,7 @@ class GPS:
         if not self.has_signal:
             return False
 
-        current_time = self.timer.get_current_time()
+        current_time = self.timer.get_time_elapsed()
 
         # Return if time elapsed since last GPS check is greater than the time_interval (see __init__ for definition)
         return (current_time - self.last_update_time) >= self.time_interval
@@ -60,7 +59,7 @@ class GPS:
         #     self.is_jammed = True
         #     return None
 
-        self.last_update_time = self.timer.get_elapsed_time()
+        self.last_update_time = self.timer.get_time_elapsed()
         return raw_measurement
 
     def detect_jammed(self, measurement: np.ndarray) -> bool:

@@ -1,14 +1,15 @@
 import numpy as np
 
 class KalmanFilter:
-    def __init__(self, dt: float, init_position: list[float], init_velocity: list[float], process_noise_std: float, std_mea: float=0.05) -> None:
+    def __init__(self, dt: float, init_position: list[float], init_velocity: list[float], process_noise_std: float,
+                 std_mea: float=0.05) -> None:
         """
-        Set up the Kalman filter with the necessary intial and default matrices.
+        Set up the Kalman filter with the necessary initial and default matrices.
         """
         # Sampling time
         self.dt = dt
 
-        # Measurement error (GPS/TERCOM), definetly a simplfy of real life case
+        # Measurement error (GPS/TERCOM), definitely a simplify of real life case
         self.std_mea = std_mea
 
         # Initial velocity
@@ -59,7 +60,6 @@ class KalmanFilter:
 
         # Process covariance matrix (~50m initial error)
         self.P = np.eye(6) * 100
-
     
     def predict(self, acc_input: list[float]) -> None:
         """
