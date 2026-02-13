@@ -141,4 +141,3 @@ if __name__ == "__main__":
         print(f"TERCOM Execution Time: {duration:.2f} ms")
     else:
         print("Match Failed!")
-

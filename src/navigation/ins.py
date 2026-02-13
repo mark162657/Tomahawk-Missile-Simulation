@@ -1,28 +1,3 @@
-# import numpy as np
-# import math
-#
-# from src.terrain.dem_loader import DEMLoader
-#
-# class INS:
-#     def __init__(self, init_pos: np.ndarray, init_vel: np.ndarray, init_att: np.ndarray) -> None:
-#         """
-#         Args:
-#             - init_pos: Initial position as a list, [x, y, z]
-#             - init_vel: Initial velocity as a list, [vx, vy, vz]
-#             - init_att: Initial attitude as a list, [pitch, roll, heading] in radian
-#         """
-#         self.pos = init_pos.astype(float)
-#         self.vel = init_vel.astype(float)
-#         self.att = init_att.astype(float)
-#
-#         self.accel_bias = np.array([0.01, 0.01, 0.05]) # m/s^2
-#         self.gyro_drift = np.array([0.001, 0.001, 0.001]) # rad/s
-#
-#     def update(self, dt:float, accel_body: np.ndarray, gyro_rates: np.ndarray) -> None:
-#         true_accel = accel_body - self.accel_bias
-#         true_gyro = gyro_rates - self.gyro_drift
-#
-
 import numpy as np
 import math
 

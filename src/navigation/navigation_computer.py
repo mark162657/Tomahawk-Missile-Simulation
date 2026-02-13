@@ -1,13 +1,14 @@
 import numpy as np
 
-from kalman_filter import KalmanFilter
-from tercom import TERCOM
-from gps import GPS
-from ins import INS
+from .kalman_filter import KalmanFilter
+from .tercom import TERCOM
+from .gps import GPS
+from .ins import INS
 from src.terrain.coordinates import CoordinateSystem
 
 class NavigationComputer:
-    def __init__(self, start_gps: tuple[float, float], gps_freq_hz: int, ins_freq_hz: int, tercom_freq_hz: int):
+    def __init__(self, start_gps: tuple[float, float], gps_freq_hz: int, ins_freq_hz: int, tercom_freq_hz: int,
+                 tif_name: str):
 
         init_pos_array = np.array([0.0, 0.0, 0.0]) # x y z (alt)
         init_vel_array = np.array([0.0, 0.0, 0.0]) # assume 0 at 0 sec
