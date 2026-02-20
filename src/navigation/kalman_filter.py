@@ -1,5 +1,4 @@
 import numpy as np
-from .ins import INS
 
 class KalmanFilter:
     def __init__(self, dt: float, init_position: list[float], init_velocity: list[float], process_noise_std: float,

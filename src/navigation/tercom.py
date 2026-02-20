@@ -47,6 +47,36 @@ class TERCOM:
         current_time = self.timer.get_time_elapsed()
         return (current_time - self.last_update_time) >= self.time_interval
 
+    def cross_correlation(self, a_greater_patch: np.ndarray, b_sensed_patch: np.ndarray) -> float:
+        """
+        Manual function implementation for normalized cross-correlation.
+
+        Args:
+            a_greater_patch: labelled patch a, the patch in database to compare
+            b_sensed_patch: labelled patch b, the elevation patch sensed by missile
+
+
+        """
+
+        a_mean = np.mean(a_greater_patch)
+        b_mean = np.mean(b_sensed_patch)
+
+        a_diff = a_greater_patch - a_mean
+        b_diff = b_sensed_patch - b_mean
+
+        # Get numerator
+        numerator = np.sum((a_diff) * (b_diff))
+
+        # Square difference
+        a_sqr_diff = np.sum((a_diff) ** 2)
+        b_sqr_diff = np.sum((b_diff) ** 2)
+
+        denominator = np.sqrt(a_sqr_diff * b_sqr_diff)
+        correlation = numerator / denominator
+
+        return correlation
+
+
     def process_update(self, sensed_patch: np.ndarray, est_lat: float, est_lon: float, search_size: int=125) \
             -> tuple[float, float, float]:
         """
@@ -77,10 +107,9 @@ class TERCOM:
         for r in range(db_row - snsr_patch_height + 1): # vertical movement
             for c in range(db_col - snsr_patch_width + 1): # horizontal
                 sub_patch = db_search_patch[r: r + snsr_patch_height, c : c + snsr_patch_width] # extract 7 * 7 chunk
-                norm_sub_patch = self.dem_loader.normalized_patch(sub_patch)
 
                 # Get NCC
-                correlation = np.mean(sensed_patch * norm_sub_patch)
+                correlation = self.cross_correlation(sub_patch, sensed_patch)
 
                 if correlation > best_correlation:
                     best_correlation = correlation

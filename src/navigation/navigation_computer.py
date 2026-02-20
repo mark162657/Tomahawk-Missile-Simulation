@@ -18,9 +18,10 @@ class NavigationComputer:
         self.tercom_freq_hz = 1.0 / tercom_freq_hz
 
         self.gps_nav = GPS()
-        self.ins_nav = INS(0, 0, 0)
+        # self.ins_nav = INS(0.0, 0.0, 0.0) # initiate default relative position at 0, 0, 0
         self.tercom_nav = TERCOM()
         self.KF = KalmanFilter()
+
 
     def update(self):
         pass
