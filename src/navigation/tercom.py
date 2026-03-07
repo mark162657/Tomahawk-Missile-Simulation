@@ -141,7 +141,7 @@ class TERCOM:
         ])
 
 if __name__ == "__main__":
-    import time  # Added for high-resolution timing
+    import time
     from pathlib import Path
     from src.terrain.dem_loader import DEMLoader
     from src.control.timer import InternalTimer
@@ -153,8 +153,8 @@ if __name__ == "__main__":
 
     tercom.timer.start()
 
-    true_loc = (54.9, 98.7)
-    ins_guess = (54.903180, 98.705500)
+    true_loc = (54.7, 98.6)
+    ins_guess = (54.7005, 98.6007)
 
     sensed_patch = dem.get_elevation_patch(true_loc[0], true_loc[1], 7, True)
 
