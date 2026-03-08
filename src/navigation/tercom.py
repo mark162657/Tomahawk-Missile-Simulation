@@ -19,7 +19,7 @@ class TERCOM:
         """
         Args:
             - location: receive the current location of the missile, not a true absolute location
-            - update_freq: update the time interval (Hz)
+            - update_freq: time interval for update of position (Hz)
         """
         self.location = location
 
@@ -89,7 +89,7 @@ class TERCOM:
         if not self.is_ready():
             return None, None, None
 
-        self.last_time_update = self.timer.get_time_elapsed()
+        self.last_update_time = self.timer.get_time_elapsed()
 
         center_row, center_col = self.dem_loader.lat_lon_to_pixel(est_lat, est_lon)
         half_search = search_size // 2
