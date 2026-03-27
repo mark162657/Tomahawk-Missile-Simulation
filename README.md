@@ -22,3 +22,24 @@ The project focuses on realistic simulation of missile guidance over digital ele
 - Proportional navigation guidance toward target
 
 ## Work In Progress.....
+
+## Planning Interface
+
+A lightweight desktop planning interface is available for drafting missions before the full simulator is finished.
+
+Run it from the project root:
+
+```bash
+python3 planner.py
+```
+
+What it supports right now:
+
+- Select a DEM file from `data/dem/`
+- Enter start and target GPS coordinates
+- Edit missile planning parameters
+- Validate whether both coordinates are inside the loaded terrain
+- Preview the DEM in the planner with automatic crop-and-downsample around the mission area
+- Launch an optional external GPU preview window when `fastplotlib` is available
+- Estimate direct-flight distance, time, and turning radius
+- Save and load planning drafts as JSON in `plans/`

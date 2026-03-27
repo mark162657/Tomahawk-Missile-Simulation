@@ -27,8 +27,7 @@ public:
   // Constructor: accepting numpy array and var from Python
   PathfinderCPP(py::array_t<float> dem_array,         // float: float32
                 py::array_t<double> lat_lookup_table, // double: float64
-                double meter_per_y, // Switched from meter_per_z, because row is
-                                    // now Y (latitude)
+                double meter_per_y,
                 int rows,
                 int cols) // order matters!!
       : m_rows(rows), m_cols(cols), m_meter_per_y(meter_per_y) {
@@ -43,6 +42,7 @@ public:
     std::cout << "C++ Engine Online. Map Size: " << m_rows << "x" << m_cols
               << " (" << m_total_pixels << " pixels)" << std::endl;
   }
+
   // --- Main A* Pathfinding Algorithm ---
   // std::pair in std::vector == storing tuple() in py list
   std::vector<std::pair<int, int>> find_path(int start_idx, int end_idx,
