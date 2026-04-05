@@ -1,5 +1,4 @@
 #include <algorithm>
-#include <cmath>
 #include <iostream>
 #include <limits>
 #include <pybind11/numpy.h>

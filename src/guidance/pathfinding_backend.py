@@ -1,8 +1,6 @@
-import sys
 import numpy as np
 import time
 from pathlib import Path
-from outcome import Value
 from ..terrain.dem_loader import DEMLoader
 
 # --- Import C++ Backend ---
@@ -128,7 +126,7 @@ class Pathfinding:
         rows, cols = zip(*pixel_path)
 
         # Convert using Rasterio transform
-        lons, lats = self.dem_loader.pixel_to_lat_lon(rows, cols)
+        lats, lons = self.dem_loader.pixel_to_lat_lon(rows, cols)
 
         # Zip back into (lat, lon) tuples
         return list(zip(lats, lons))

@@ -33,12 +33,22 @@ Run it from the project root:
 python3 planner.py
 ```
 
+Missile configurations now have a dedicated manager app:
+
+```bash
+python3 missile_configurator.py
+```
+
 What it supports right now:
 
 - Select a DEM file from `data/dem/`
+- Select a named missile configuration from shared storage in `data/missiles/configurations.json`
+- Open a dedicated missile configuration app to create, rename, edit, and delete missile presets
 - Enter start and target GPS coordinates
-- Edit missile planning parameters
+- Add, edit, reorder, and remove waypoints
+- Use an interactive embedded map with pan/zoom tools and click-to-place mission points
 - Validate whether both coordinates are inside the loaded terrain
+- Run the C++ pathfinder from the planner for start -> waypoints -> target routing
 - Preview the DEM in the planner with automatic crop-and-downsample around the mission area
 - Launch an optional external GPU preview window when `fastplotlib` is available
 - Estimate direct-flight distance, time, and turning radius

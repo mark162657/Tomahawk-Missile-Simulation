@@ -57,7 +57,7 @@ class KalmanFilter:
         # Scenario 2: TERCOM (12m deviation)
         # lateral Accuracy: +/- 10-15m (Grid dependent)
         # vertical Accuracy: Radar Altimeter is very precise (+/- 1m), according to the vegetation and landscape.
-        self.R_TERCOM = np.diag([12.0 ** 2, 4.0 ** 2, 2.5 ** 2])
+        self.R_TERCOM = np.diag([13.0 ** 2, 8.0 ** 2, 5.0 ** 2])
 
         # Process covariance matrix (~50m initial error)
         self.P = np.eye(6) * 100
@@ -84,7 +84,7 @@ class KalmanFilter:
         Args:
             measurement: list[lat, lon, alt]
         """
-        # Set the R matrix to different value based on sensor_type
+        # Set the R matrix (measurement error) to different value based on sensor_type
         if sensor_type == "TERCOM":
             R_current = self.R_TERCOM
         else:
