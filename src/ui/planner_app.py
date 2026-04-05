@@ -12,7 +12,7 @@ import numpy as np
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 from matplotlib.figure import Figure
 
-from src.guidance.pathfinding_backend import Pathfinding
+from src.pathfinder.pathfinding_backend import Pathfinding
 from src.missile.config_store import DEFAULT_CONFIGURATION, get_configuration, load_configurations
 from src.missile.profile import MissileProfile
 from src.terrain.dem_loader import DEMLoader

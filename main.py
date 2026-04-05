@@ -11,8 +11,8 @@ import matplotlib.pyplot as plt
 from src.missile.state import MissileState
 from src.missile.profile import MissileProfile
 # from src.navigation.system import NavigationSystem
-from src.guidance.pathfinding_backend import Pathfinding
-from src.guidance.trajectory import TrajectoryGenerator
+from src.pathfinder.pathfinding_backend import Pathfinding
+from src.pathfinder.trajectory import TrajectoryGenerator
 from src.terrain.dem_loader import DEMLoader
 from src.visualization.plotter import MissionPlotter
 from src.control.timer import InternalTimer
