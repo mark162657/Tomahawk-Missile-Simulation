@@ -10,7 +10,7 @@ class KalmanFilter:
         # Sampling time
         self.dt = dt
 
-        # Measurement error (GPS/TERCOM), definitely a simplify of real life case
+        # Measurement error (GPS/TERCOM)
         self.std_mea = std_mea
 
         # Initial velocity

@@ -302,8 +302,8 @@ class MissileSimulation:
             import traceback
             traceback.print_exc()
 
-    def run(self):
-        InternalTimer().start()
+    def run(self) -> None:
+        pass
 
 
 
