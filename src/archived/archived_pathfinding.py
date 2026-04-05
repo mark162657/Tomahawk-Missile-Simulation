@@ -1,6 +1,6 @@
 import heapq
 from multiprocessing import heap
-from ..terrain.dem_loader import DEMLoader
+from terrain.dem_loader import DEMLoader
 import math
 from pathlib import Path
 import numpy as np
