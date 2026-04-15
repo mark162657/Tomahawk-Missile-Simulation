@@ -201,8 +201,8 @@ private:
 
     // New: slope penalty for trying to force missile to stay in valley instead
     // of taking lazy shortcut, risking exposure
-    float height_diff = abs(
-        neighbor_elev - current_elev); // yeah its just like climb but with abs
+    float climb = neighbor_elev - current_elev;
+    float height_diff = std::abs(climb); // yeah its just like climb but with abs
     float slope_penalty = height_diff * 5.0f;
 
     // No-data check
@@ -228,11 +228,10 @@ private:
     double height_penalty = neighbor_elev * 0.8;
 
     // --- Handle: decision penalties ---
-    float climb = neighbor_elev - current_elev;
 
     // downhill
     if (climb < 0)
-      return dist_cost + (climb * 0.5) + height_penalty;
+      return dist_cost + (climb * 0.5) + height_penalty + slope_penalty;
 
     // uphill
     float gradient = climb / (dist_cost + 1e-6f);
