@@ -22,10 +22,11 @@ env/
 build/
 cmake-build-debug/
 cmake-build-release/
+node_modules/
+frontend/web_planner/dist/
 
 # Ignore Compiled Binaries (They differ per OS)
 *.so
 *.pyd
 *.dll
 *.dylib
-

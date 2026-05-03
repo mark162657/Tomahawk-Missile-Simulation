@@ -20,6 +20,14 @@ echo "[*] Checking dependencies..."
 python3 -m pip install -q fastapi uvicorn python-multipart rasterio numpy pydantic
 
 # 3. Build React frontend if dist is missing
+if [ ! -d "$FRONTEND_DIR/node_modules" ]; then
+    echo "[*] Installing React frontend dependencies..."
+    (
+        cd "$FRONTEND_DIR"
+        npm install
+    )
+fi
+
 if [ ! -d "$FRONTEND_DIR/dist" ]; then
     echo "[*] Building React frontend..."
     (

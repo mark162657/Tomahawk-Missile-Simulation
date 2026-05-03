@@ -27,6 +27,14 @@ The project focuses on realistic simulation of missile guidance over digital ele
 
 A lightweight desktop planning interface is available for drafting missions before the full simulator is finished.
 
+The web mission planner and missile tracker live in `frontend/web_planner/` and are served by FastAPI:
+
+```bash
+./run_web_planner.sh
+```
+
+Open `http://localhost:8000` after the server starts. The web planner reads DEMs from `data/dem/`, overlays DEM coverage on an external map, supports saved missions and custom missile profiles in browser storage, runs the existing pathfinding backend, and provides a fast simulated tracking console for the latest planned trajectory.
+
 Run it from the project root:
 
 ```bash
