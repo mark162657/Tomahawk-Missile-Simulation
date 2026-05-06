@@ -1,7 +1,6 @@
 import math
 import numpy as np
 
-from src.control.timer import InternalTimer
 from src.terrain.dem_loader import DEMLoader
 from numpy.lib.stride_tricks import sliding_window_view
 
@@ -15,7 +14,7 @@ class TERCOM:
         - db data: from TerrainDatabase.get_elevation_patch
         - sensor data:
     """
-    def __init__(self, location: list[float, float], DEM_NAME: str):
+    def __init__(self, location: list[float, float], dem_name: str):
         """
         Args:
             - location: receive the current location of the missile, not a true absolute location
@@ -23,7 +22,7 @@ class TERCOM:
         """
         self.location = location
 
-        tif_path = Path(__file__).parent.parent.parent / 'data' / 'dem' / f'{DEM_NAME}'
+        tif_path = Path(__file__).parent.parent.parent / 'data' / 'dem' / f'{dem_name}'
         dem = DEMLoader(tif_path)
         self.dem_loader = dem
 
@@ -73,10 +72,6 @@ class TERCOM:
         Complexity:
             - for the nested for loop iteration: O(N^2 * M^2)
         """
-        if not self.is_ready():
-            return None, None, None
-
-        self.last_update_time = self.timer.get_time_elapsed()
 
         center_row, center_col = self.dem_loader.lat_lon_to_pixel(est_lat, est_lon)
         half_search = search_size // 2
@@ -90,10 +85,15 @@ class TERCOM:
         best_offset = (0, 0)
         found_match = False
 
-        db_row, db_col = db_search_patch.shape
-        for r in range(db_row - snsr_patch_height + 1): # vertical movement
-            for c in range(db_col - snsr_patch_width + 1): # horizontal
-                sub_patch = db_search_patch[r: r + snsr_patch_height, c : c + snsr_patch_width] # extract 7 * 7 chunk
+        window = sliding_window_view(db_search_patch, (snsr_patch_height, snsr_patch_width))
+
+        # temp1, temp2 is not used, and is only used to handle ValueError: too many values to unpack
+        win_rows, win_cols, temp1, temp2 = window.shape
+        # print(window)
+
+        for r in range(win_rows): # vertical movement
+            for c in range(win_cols): # horizontal
+                sub_patch = window(r, c)
 
                 # Get NCC
                 correlation = self.cross_correlation(sub_patch, sensed_patch)
@@ -131,14 +131,12 @@ if __name__ == "__main__":
     import time
     from pathlib import Path
     from src.terrain.dem_loader import DEMLoader
-    from src.control.timer import InternalTimer
 
     dem_path = Path(__file__).parents[2] / "data" / "dem" / "merged_dem_sib_N54_N59_E090_E100.tif"
     dem = DEMLoader(dem_path)
-    tercom = TERCOM(location=(54.9, 98.7))
+    tercom = TERCOM(location=(54.9, 98.7), dem_name="merged_dem_sib_N54_N59_E090_E100.tif")
     tercom.dem_loader = dem
 
-    tercom.timer.start()
 
     true_loc = (54.7, 98.6)
     ins_guess = (54.7005, 98.6007)
