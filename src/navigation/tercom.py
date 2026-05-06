@@ -93,7 +93,7 @@ class TERCOM:
 
         for r in range(win_rows): # vertical movement
             for c in range(win_cols): # horizontal
-                sub_patch = window(r, c)
+                sub_patch = window[r, c]
 
                 # Get NCC
                 correlation = self.cross_correlation(sub_patch, sensed_patch)
